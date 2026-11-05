@@ -29,4 +29,13 @@ Puanlar ve gruplar SQLite dosyasında tutulur. Tek uygulama örneği ve kalıcı
 
 Projeksiyon bilgisayarında Chrome → Uzantılar → Geliştirici modu → **Paketlenmemiş öğe yükle** ile bu deponun `extension` klasörünü yükleyin. Instagram hesabınıza giriş yapın ve herhangi bir Reel açın. Eklentide **START · BU SEKMEYİ BAĞLA** düğmesine basın. İsteğe bağlı QR/sonuç ve otomatik ses seçeneklerini açın. Moderatörden Reel seçip doğru videoyu, başa dönme davranışını ve hoparlör sesini gerçek ortamda prova edin. Yayın adresi sabit olarak `https://radiotedu.com/reels-party` şeklindedir; farklı alan adı kullanılacaksa eklentideki `background.js` ve `manifest.json` birlikte uyarlanıp eklenti yeniden yüklenmelidir.
 
+### GitHub'dan indirme
+
+1. GitHub'da depo sayfasında **Code → Download ZIP** ile projeyi indirin ve ZIP dosyasını bilgisayarınızda bir klasöre çıkarın.
+2. Chrome'da `chrome://extensions` sayfasını açın, **Geliştirici modu**nu açın ve **Paketlenmemiş öğe yükle** seçeneğine basın.
+3. Çıkardığınız klasörde **`extension`** klasörünü seçin. ZIP dosyasını veya üst klasörü değil, içinde `manifest.json` bulunan bu klasörü seçin.
+4. Instagram'da bir Reel açın, eklentiyi açıp **START · BU SEKMEYİ BAĞLA** düğmesine basın. Sunucunun `radiotedu.com/reels-party` adresinde kurulmuş olması gerekir.
+
+`extensions/reels-feasibility-test` önceki Instagram geçiş denemelerinde kullanılan ayrı ve deneysel test eklentisidir. Etkinlik için gerekli değildir ve projeksiyon eklentisiyle aynı sekmede çalıştırılması testleri etkileyebilir. Gerçek etkinlikte `extension` klasöründeki projeksiyon eklentisini kullanın. Eski `earnedoak.chatgpt.site` adresine bağlı projeksiyon eklentisi yeni sunucuyla çalışmaz; onun yerine bu depodaki güncel sürümü kurun.
+
 Önceki Cloudflare Sites denemesinin veritabanı bu sunucuya otomatik taşınmaz. Başlangıçta beş Reel URL'si ve görünür adı eklenir; gruplar ve puanlar yeni kurulumda boştur.
