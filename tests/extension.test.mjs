@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import vm from 'node:vm';
+import {JSDOM} from 'jsdom';
+import QRCode from 'qrcode';
+const read=file=>readFile(new URL('../extension/'+file,import.meta.url),'utf8');
+test('extension reads the deployment subpath and provides group results and matching QR',async()=>{
+ let listener,requested;const code=await read('background.js');
+ const matrix=QRCode.create('https://radiotedu.com/reels-party/',{errorCorrectionLevel:'M'}).modules;
+ const qrRows=Array.from({length:matrix.size},(_,y)=>Array.from({length:matrix.size},(_,x)=>matrix.get(y,x)?'1':'0').join(''));
+ const data={event:{current_reel:'ABC',phase:'result',round:1},reels:[{id:'ABC',label:'Reel'}],qrRows,results:{scores:[{name:'Grup 1',score:8}],average:8,voted:1,total:1}};
+ const chrome={runtime:{onMessage:{addListener:f=>listener=f}},storage:{local:{get:async()=>({projectionTab:9}),set:async()=>{}}},tabs:{get:async()=>({url:'https://www.instagram.com/reel/ABC/'})}};
+ vm.runInNewContext(code,{chrome,URL,AbortController,setTimeout,clearTimeout,Date,fetch:async url=>{requested=url;return {ok:true,json:async()=>data}}});
+ const response=await new Promise(resolve=>listener({type:'projection-tick'},{tab:{id:9,url:'https://www.instagram.com/reel/ABC/'}},resolve));
+ assert.equal(requested,'https://radiotedu.com/reels-party/api/state');assert.equal(response.state.results.average,8);assert.deepEqual(response.state.qrRows,qrRows);
+ const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://www.instagram.com/reel/ABC/',runScripts:'outside-only'}),w=dom.window;let shadow;
+ const attach=w.Element.prototype.attachShadow;w.Element.prototype.attachShadow=function(options){shadow=attach.call(this,options);return shadow};
+ w.chrome={runtime:{sendMessage:async()=>response,onMessage:{addListener(){}}}};w.setInterval=()=>0;w.setTimeout=()=>0;w.clearTimeout=()=>{};
+ for(const f of ['audio.js','continuity.js','content.js'])w.eval(await read(f));
+ await w.tick();
+ assert.match(shadow.querySelector('.counts').textContent,/Grup 1/);assert.match(shadow.querySelector('.counts').textContent,/8/);
+ assert.equal(shadow.querySelector('svg').getAttribute('viewBox'),`0 0 ${qrRows.length+8} ${qrRows.length+8}`);
+ dom.window.close();
+});

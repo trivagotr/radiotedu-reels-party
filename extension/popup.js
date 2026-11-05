@@ -1,0 +1,7 @@
+const status=document.getElementById('status');
+async function show(){const {projectionTab,bridgeStatus,panelEnabled,audioEnabled}=await chrome.storage.local.get(['projectionTab','bridgeStatus','panelEnabled','audioEnabled']);document.getElementById('panel').checked=panelEnabled!==false;document.getElementById('audio').checked=audioEnabled===true;status.textContent=projectionTab?'Bağlı Instagram sekmesi: '+projectionTab+'\n'+(bridgeStatus?(bridgeStatus.ok?'Son seçilen: '+bridgeStatus.id:'Bağlantı sorunu: '+bridgeStatus.error):'İlk kontrol bekleniyor.'):'Henüz bağlı sekme yok.'}
+document.getElementById('on').onclick=async()=>{const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id||!tab.url?.startsWith('https://www.instagram.com/')){status.textContent='Önce Instagram sekmesini aktif yap ve eklentiyi o sekmede aç.';return}await chrome.storage.local.set({projectionTab:tab.id,bridgeStatus:null});try{await chrome.tabs.sendMessage(tab.id,{type:'projection-start'})}catch{}await show()};
+document.getElementById('off').onclick=async()=>{await chrome.storage.local.remove(['projectionTab','bridgeStatus']);await show()};
+document.getElementById('panel').onchange=async event=>{await chrome.storage.local.set({panelEnabled:event.target.checked})};
+document.getElementById('audio').onchange=async event=>{await chrome.storage.local.set({audioEnabled:event.target.checked})};
+chrome.storage.onChanged.addListener(show);show();

@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "RadioTEDU · Instagram projeksiyon bağlantısı",
+  "version": "1.0.0",
+  "description": "Moderatörün seçtiği Reel'i seçilen Instagram sekmesinde açar.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://www.instagram.com/*", "https://radiotedu.com/*"],
+  "background": {"service_worker":"background.js"},
+  "action": {"default_popup":"popup.html"},
+  "content_scripts": [{"matches":["https://www.instagram.com/*"],"js":["audio.js","continuity.js","content.js"]}]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "radiotedu-reels-party",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24.15.0"},
+  "scripts": {"start": "node server/index.mjs", "test": "node --test tests/*.test.mjs"},
+  "dependencies": {"qrcode": "1.5.4"},
+  "devDependencies": {"jsdom": "26.1.0"}
+}
