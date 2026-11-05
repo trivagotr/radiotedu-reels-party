@@ -4,6 +4,7 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createApp} from '../server/app.mjs';
+import {DatabaseSync} from 'node:sqlite';
 
 test('group scoring, moderator controls, access checks and persistence under the subpath', async()=>{
  const dir=await mkdtemp(join(tmpdir(),'rt-reels-'));let app,server;
@@ -22,9 +23,8 @@ test('group scoring, moderator controls, access checks and persistence under the
   let bad=await request('/api/admin/login',{method:'POST',body:{password:'wrong'}});assert.equal(bad.status,401);
   const login=await request('/api/admin/login',{method:'POST',body:{password:options.adminPassword}});assert.equal(login.status,200);assert.ok(login.cookie);
   const initial=await request('/api/state');await request('/api/admin/select',{method:'POST',cookie:login.cookie,body:{id:initial.data.event.current_reel}});assert.equal((await request('/api/state')).data.event.round,initial.data.event.round,'selecting the already active Reel must not erase the current round');
-  const g1=(await request('/api/groups',{method:'POST',body:{}})).data,g2=(await request('/api/groups',{method:'POST',body:{}})).data;
-  assert.notEqual(g1.id,g2.id);assert.notEqual(g1.token,g2.token);assert.match(g1.name,/Grup/);
-  assert.equal((await request('/api/groups',{method:'POST',body:{name:g1.name.toLowerCase()}})).status,409,'group names must be distinct');
+  const g1=(await request('/api/groups',{method:'POST',body:{name:'Özel ad'}})).data,g2=(await request('/api/groups',{method:'POST',body:{name:'Özel ad'}})).data;
+  assert.notEqual(g1.id,g2.id);assert.notEqual(g1.token,g2.token);assert.equal(g1.name,'1');assert.equal(g2.name,'2');
   state=(await request('/api/state')).data;assert.equal(state.groups.length,2);
   assert.equal((await request('/api/admin/phase',{method:'POST',cookie:login.cookie,body:{phase:'voting'}})).status,200);
   let target={round:state.event.round,reel:state.event.current_reel};
@@ -52,4 +52,16 @@ test('group scoring, moderator controls, access checks and persistence under the
 test('sample placeholders cannot be used as production credentials',()=>{
  const options={dbPath:join(tmpdir(),'unused-rt.sqlite'),publicUrl:'https://radiotedu.com/reels-party',adminPassword:'REPLACE_WITH_UNIQUE_PASSWORD',sessionSecret:'REPLACE_WITH_UNIQUE_RANDOM_SECRET_AT_LEAST_32_CHARACTERS'};
  assert.throws(()=>createApp(options),/benzersiz/);
+});
+
+test('existing custom names migrate to numbers without deleting group identities or scores',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'rt-migration-'));const options={dbPath:join(dir,'party.sqlite'),publicUrl:'http://test.local/reels-party',adminPassword:'test-password-123',sessionSecret:'test-secret-at-least-thirty-two-characters'};
+ try {let app=createApp(options);app.close();let db=new DatabaseSync(options.dbPath);
+ db.prepare('INSERT INTO groups VALUES(?,?,?,?)').run('old1','Özel ad','hash1',1);
+ db.prepare('INSERT INTO groups VALUES(?,?,?,?)').run('old2','Grup 2','hash2',2);
+ db.prepare('INSERT INTO scores VALUES(?,?,?,?,?)').run(1,'DfPudnVq6pu','old1',8,1);db.close();
+ app=createApp(options);app.close();db=new DatabaseSync(options.dbPath);
+ try {assert.deepEqual(db.prepare('SELECT id,name,token_hash FROM groups ORDER BY created_at').all().map(x=>({...x})),[{id:'old1',name:'1',token_hash:'hash1'},{id:'old2',name:'2',token_hash:'hash2'}]);
+ assert.equal(db.prepare('SELECT score FROM scores WHERE group_id=?').get('old1').score,8)} finally {db.close()}
+ } finally {await rm(dir,{recursive:true,force:true})}
 });

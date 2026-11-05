@@ -4,7 +4,7 @@ Grupların birer temsilciyle katıldığı, her Reel için 1–10 ortak puan ver
 
 ## Çalışma biçimi
 
-- Her temsilci bir grup oluşturur; boş ad bırakılırsa `Grup 1`, `Grup 2`… atanır. Grup kimliği temsilcinin tarayıcısında saklanır; sayfa yenilenince korunur. Cihaz/tarayıcı verisi silinirse yeni grup açılır. Sistem gerçek dünyada aynı kişinin başka cihazla başka grup açmasını kesin olarak engellemez; moderatör yanlış oluşturulan grupları kaldırabilir.
+- Her temsilci bir grup oluşturur; sistem otomatik `1`, `2`, `3`… numarası verir. Katılımcılar grup adı belirleyemez. Önceki sürümden kalan grupların adları uygulama başlatılırken numaraya çevrilir; grup kimlikleri ve puanlar korunur. Grup kimliği temsilcinin tarayıcısında saklanır; sayfa yenilenince korunur. Cihaz/tarayıcı verisi silinirse yeni grup açılır. Sistem gerçek dünyada aynı kişinin başka cihazla başka grup açmasını kesin olarak engellemez; moderatör yanlış oluşturulan grupları kaldırabilir.
 - Her grup açık turda bir ortak 1–10 puan verir; oylama açıkken güncelleyebilir. Sonuçlar moderatör açana kadar katılımcıya ve sahneye gizlidir. Açıldığında grup puanları ve puan veren grupların ortalaması gösterilir. Yeni Reel seçimi yeni tur açar.
 - `extension/` mevcut Instagram projeksiyon köprüsüdür. Eklenti seçili Instagram sekmesini moderatörün Reel'ine yönlendirir; geçiş **tam sayfa yükler**, Instagram'ın özgün dikey kaydırma animasyonu değildir. Ses otomatik açılmayı deneyebilir; tarayıcı/Instagram ve salon ses sistemi ayrıca sınanmalıdır. Reel'ler indirilmez.
 - `/stage` QR kodu, sonuçları ve Instagram gömülü oynatıcısını gösterir. Bazı Reel'ler gömülü oynatmada açılmayabilir; bu durumda eklentiyle gerçek Instagram sekmesini kullanın. Eklentinin paneli de QR ve grup sonuçlarını gösterebilir.
