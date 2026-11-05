@@ -25,6 +25,12 @@ test('group scoring, moderator controls, access checks and persistence under the
   const initial=await request('/api/state');await request('/api/admin/select',{method:'POST',cookie:login.cookie,body:{id:initial.data.event.current_reel}});assert.equal((await request('/api/state')).data.event.round,initial.data.event.round,'selecting the already active Reel must not erase the current round');
   const g1=(await request('/api/groups',{method:'POST',body:{name:'Özel ad'}})).data,g2=(await request('/api/groups',{method:'POST',body:{name:'Özel ad'}})).data;
   assert.notEqual(g1.id,g2.id);assert.notEqual(g1.token,g2.token);assert.equal(g1.name,'1');assert.equal(g2.name,'2');
+  assert.equal((await request('/api/state')).data.event.registration_open,true);
+  assert.equal((await request('/api/admin/registration',{method:'POST',body:{open:false}})).status,401);
+  assert.equal((await request('/api/admin/registration',{method:'POST',cookie:login.cookie,body:{open:'false'}})).status,400);
+  assert.equal((await request('/api/admin/registration',{method:'POST',cookie:login.cookie,body:{open:false}})).status,200);
+  assert.equal((await request('/api/state')).data.event.registration_open,false);
+  assert.equal((await request('/api/groups',{method:'POST',body:{}})).status,409,'server must reject group creation when closed');
   state=(await request('/api/state')).data;assert.equal(state.groups.length,2);
   assert.equal((await request('/api/admin/phase',{method:'POST',cookie:login.cookie,body:{phase:'voting'}})).status,200);
   let target={round:state.event.round,reel:state.event.current_reel};
@@ -44,8 +50,14 @@ test('group scoring, moderator controls, access checks and persistence under the
   assert.equal((await request('/api/admin/remove',{method:'POST',cookie:login.cookie,body:{id:'test_ABC'}})).status,200);
   assert.equal((await request('/api/admin/remove-group',{method:'POST',cookie:login.cookie,body:{id:g2.id}})).status,200);
   assert.equal((await request('/api/me',{token:g2.token})).data.group,null);
+  assert.equal((await request('/api/score',{method:'POST',token:g2.token,body:{...target,score:5}})).status,401);
   await new Promise(r=>server.close(r));app.close();server=null;app=createApp(options);
   assert.equal(app.inspect().groups,1,'groups survive restart');assert.equal(app.inspect().reels,5);
+  server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));
+  const restarted=`http://127.0.0.1:${server.address().port}/reels-party`;
+  assert.equal((await (await fetch(restarted+'/api/state')).json()).event.registration_open,false,'closed status persists after restart');
+  const reopen=await fetch(restarted+'/api/admin/registration',{method:'POST',headers:{origin:'http://test.local','content-type':'application/json',cookie:login.cookie},body:JSON.stringify({open:true})});assert.equal(reopen.status,200);
+  const newGroup=await fetch(restarted+'/api/groups',{method:'POST',headers:{origin:'http://test.local','content-type':'application/json'},body:'{}'});assert.equal(newGroup.status,201);
  } finally {if(server)await new Promise(r=>server.close(r));app?.close();await rm(dir,{recursive:true,force:true})}
 });
 
